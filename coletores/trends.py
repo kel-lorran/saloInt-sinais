@@ -13,7 +13,10 @@ Só biblioteca padrão.
 import csv
 import datetime as dt
 import email.utils
+import json
+import re
 import sys
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -21,6 +24,10 @@ from pathlib import Path
 URL = "https://trends.google.com/trending/rss?geo=BR"
 HT = "{https://trends.google.com/trending/rss}"
 RAIZ = Path(__file__).resolve().parent.parent
+IBGE = "https://servicodados.ibge.gov.br/api/v2/censos/nomes/"
+NOME_MIN = 500  # nomes com pelo menos 500 registros no Censo contam como nome de pessoa
+PESSOA = "[pessoa]"
+JOGO = re.compile(r"(x|vs|contra)")
 COLUNAS = ["lido_em", "termo", "faixa", "volume_min", "entrou_em",
            "noticias", "noticia_titulo", "noticia_fonte", "noticia_url"]
 
@@ -59,6 +66,34 @@ def ler(xml, agora):
     return linhas
 
 
+def nomes_registrados(palavras):
+    """Quais palavras o IBGE registra como prenome. Falha alto se a API não responder."""
+    if not palavras:
+        return set()
+    url = IBGE + urllib.parse.quote("|".join(sorted(palavras)), safe="|")
+    with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "saloInt-sinais"}), timeout=30) as r:
+        dados = json.loads(r.read())
+    return {d["nome"].lower() for d in dados if sum(x["frequencia"] for x in d["res"]) >= NOME_MIN}
+
+
+def candidato_a_pessoa(termo):
+    palavras = termo.split()
+    return (len(palavras) >= 2 and not JOGO.search(termo)
+            and all(p.isalpha() for p in palavras))
+
+
+def anonimizar(linhas):
+    """Termos que parecem nome de pessoa viram [pessoa]; a notícia, que traz o nome, é apagada.
+    A faixa e os horários ficam, para a contagem de sinais não perder ninguém."""
+    candidatos = {l["termo"].split()[0].lower() for l in linhas
+                  if l["termo"] != PESSOA and candidato_a_pessoa(l["termo"].lower())}
+    nomes = nomes_registrados(candidatos)
+    for l in linhas:
+        if l["termo"] != PESSOA and candidato_a_pessoa(l["termo"].lower()) and l["termo"].split()[0].lower() in nomes:
+            l.update({"termo": PESSOA, "noticia_titulo": "", "noticia_fonte": "", "noticia_url": ""})
+    return linhas
+
+
 def assinatura(linhas):
     """O que define uma leitura: termos, faixas e horários de entrada."""
     return sorted((l["termo"], str(l["faixa"]), l["entrou_em"]) for l in linhas)
@@ -81,6 +116,10 @@ def main():
         sys.exit(f"falha ao ler o feed: {e}")
     if not linhas:
         sys.exit("o feed veio sem itens")
+    try:
+        linhas = anonimizar(linhas)
+    except Exception as e:  # sem o IBGE não dá para filtrar nomes: melhor não gravar
+        sys.exit(f"falha ao consultar nomes no IBGE; leitura não gravada: {e}")
     destino = RAIZ / "dados" / "trends" / f"{agora:%Y-%m}.csv"
     destino.parent.mkdir(parents=True, exist_ok=True)
     novo = not destino.exists()

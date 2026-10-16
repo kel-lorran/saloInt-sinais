@@ -10,7 +10,8 @@ O repositório é público para ter minutos ilimitados no GitHub Actions; os dad
 
 ## Regras
 - Tudo o que o feed traz é gravado, inclusive termos que somem depois. Sem os sinais que "morreram", a medida de acerto do sensor fica inflada (viés de sobrevivência).
-- O feed traz nomes de pessoas comuns; eles ficam nos dados brutos, que já são públicos, e são descartados na análise.
+- **Nomes de pessoas não são publicados.** Antes de gravar, o coletor consulta a API de nomes do IBGE: um termo de duas ou mais palavras, sem números e que não é jogo, cuja primeira palavra é um prenome registrado no Censo, vira `[pessoa]`, e a notícia associada (que traz o nome) é apagada. A faixa e os horários ficam, para a contagem de sinais. Se o IBGE não responder, a leitura não é gravada.
+- Nomes de uma palavra só (apelidos, artistas) passam pelo filtro.
 - Só fontes públicas e gratuitas. Nenhuma rede social é raspada.
 
 ## Colunas de `dados/trends/*.csv`
