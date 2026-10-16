@@ -59,6 +59,20 @@ def ler(xml, agora):
     return linhas
 
 
+def assinatura(linhas):
+    """O que define uma leitura: termos, faixas e horários de entrada."""
+    return sorted((l["termo"], str(l["faixa"]), l["entrou_em"]) for l in linhas)
+
+
+def ultima_leitura(destino):
+    with open(destino, encoding="utf-8", newline="") as f:
+        linhas = list(csv.DictReader(f))
+    if not linhas:
+        return []
+    ultima = linhas[-1]["lido_em"]
+    return [l for l in linhas if l["lido_em"] == ultima]
+
+
 def main():
     agora = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
     try:
@@ -70,6 +84,9 @@ def main():
     destino = RAIZ / "dados" / "trends" / f"{agora:%Y-%m}.csv"
     destino.parent.mkdir(parents=True, exist_ok=True)
     novo = not destino.exists()
+    if not novo and assinatura(linhas) == assinatura(ultima_leitura(destino)):
+        print("feed igual à última leitura; nada gravado")
+        return
     with open(destino, "a", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=COLUNAS)
         if novo:

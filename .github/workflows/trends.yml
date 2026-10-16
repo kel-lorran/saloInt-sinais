@@ -2,7 +2,7 @@ name: Coleta Google Trends
 
 on:
   schedule:
-    - cron: "17 * * * *"   # a cada hora, no minuto 17 (fora do pico do minuto 0)
+    - cron: "*/10 * * * *"   # a cada 10 minutos (o GitHub atrasa ou pula execuções; pedir mais vezes compensa)
   workflow_dispatch:        # botão "Run workflow" para rodar na mão
   push:
     branches: [main]

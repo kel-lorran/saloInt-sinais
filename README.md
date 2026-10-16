@@ -1,10 +1,12 @@
 # saloInt-sinais
 
-Dados coletados automaticamente para o sensor de tendências da base saloInt. Repositório separado para que os commits automáticos (cerca de 720 por mês) não se misturem ao histórico de decisões da base.
+Dados coletados automaticamente para o sensor de tendências da base saloInt. Repositório separado para que os commits automáticos (até alguns milhares por mês) não se misturem ao histórico de decisões da base.
 
 ## O que roda
 - `coletores/trends.py`: lê o feed público de buscas em alta do Google Trends Brasil e acrescenta a leitura em `dados/trends/AAAA-MM.csv`.
-- `.github/workflows/trends.yml`: roda o coletor a cada hora (minuto 17), pelo botão "Run workflow" ou quando o coletor muda.
+- `.github/workflows/trends.yml`: roda o coletor a cada 10 minutos, pelo botão "Run workflow" ou quando o coletor muda. Quando o feed não mudou desde a última leitura, nada é gravado.
+
+O repositório é público para ter minutos ilimitados no GitHub Actions; os dados são do feed público do Google Trends e não há nenhuma chave aqui.
 
 ## Regras
 - Tudo o que o feed traz é gravado, inclusive termos que somem depois. Sem os sinais que "morreram", a medida de acerto do sensor fica inflada (viés de sobrevivência).
