@@ -27,7 +27,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 IBGE = "https://servicodados.ibge.gov.br/api/v2/censos/nomes/"
 NOME_MIN = 500  # nomes com pelo menos 500 registros no Censo contam como nome de pessoa
 PESSOA = "[pessoa]"
-JOGO = re.compile(r"(x|vs|contra)")
+JOGO = re.compile(r"\b(x|vs|contra)\b")
 COLUNAS = ["lido_em", "termo", "faixa", "volume_min", "entrou_em",
            "noticias", "noticia_titulo", "noticia_fonte", "noticia_url"]
 
