@@ -1,0 +1,43 @@
+name: Coleta de skills
+
+on:
+  schedule:
+    - cron: "23 6 * * *"   # uma vez por dia; o GitHub pode atrasar algumas horas, o que não atrapalha aqui
+  workflow_dispatch:
+    inputs:
+      dias:
+        description: "Quantos dias para trás registrar (use mais na primeira vez)"
+        default: "1"
+  push:
+    branches: [main]
+    paths: ["coletores/skills.py", ".github/workflows/skills.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coleta-skills
+  cancel-in-progress: false
+
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Registrar repositórios novos e ler estrelas
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 coletores/skills.py --dias "${{ github.event.inputs.dias || '1' }}"
+      - name: Gravar no repositório
+        run: |
+          git config user.name "coletor-saloint"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dados
+          if git diff --cached --quiet; then
+            echo "nada novo"
+          else
+            git commit -q -m "Leitura de skills $(date -u +%Y-%m-%d)"
+            git pull -q --rebase
+            git push -q
+          fi
