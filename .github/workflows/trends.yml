@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["coletores/**", ".github/workflows/trends.yml"]
+    paths: ["coletores/trends.py", ".github/workflows/trends.yml"]
 
 permissions:
   contents: write
