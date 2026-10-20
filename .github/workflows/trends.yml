@@ -1,9 +1,13 @@
 name: Coleta Google Trends
 
+# O agendamento do GitHub é pouco confiável: pedido a cada 10 minutos, rodou em média a cada 3,4 horas
+# (15 a 19/out/2026). Por isso cada execução fica ligada quase 2 horas e lê o feed a cada 5 minutos.
+# Basta o GitHub iniciar uma execução a cada 2 horas para a cobertura ficar contínua.
+# Repositório público: os minutos do GitHub Actions são ilimitados.
 on:
   schedule:
-    - cron: "*/10 * * * *"   # a cada 10 minutos (o GitHub atrasa ou pula execuções; pedir mais vezes compensa)
-  workflow_dispatch:        # botão "Run workflow" para rodar na mão
+    - cron: "7 */2 * * *"
+  workflow_dispatch:
   push:
     branches: [main]
     paths: ["coletores/**", ".github/workflows/trends.yml"]
@@ -18,20 +22,20 @@ concurrency:
 jobs:
   coletar:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
-      - name: Ler o feed
-        run: python3 coletores/trends.py
-      - name: Gravar no repositório
+      - name: Ler o feed a cada 5 minutos por cerca de 110 minutos
         run: |
           git config user.name "coletor-saloint"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dados
-          if git diff --cached --quiet; then
-            echo "nada novo"
-          else
-            git commit -q -m "Leitura do Google Trends $(date -u +%Y-%m-%dT%H:%MZ)"
-            git pull -q --rebase
-            git push -q
-          fi
+          fim=$((SECONDS + 110 * 60))
+          while [ $SECONDS -lt $fim ]; do
+            python3 coletores/trends.py || echo "leitura falhou; tenta de novo no próximo ciclo"
+            git add dados
+            if ! git diff --cached --quiet; then
+              git commit -q -m "Leitura do Google Trends $(date -u +%Y-%m-%dT%H:%MZ)"
+              git pull -q --rebase && git push -q || echo "push falhou; vai junto no próximo ciclo"
+            fi
+            sleep 300
+          done

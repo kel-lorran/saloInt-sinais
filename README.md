@@ -4,7 +4,7 @@ Dados coletados automaticamente para o sensor de tendências da base saloInt. Re
 
 ## O que roda
 - `coletores/trends.py`: lê o feed público de buscas em alta do Google Trends Brasil e acrescenta a leitura em `dados/trends/AAAA-MM.csv`.
-- `.github/workflows/trends.yml`: roda o coletor a cada 10 minutos, pelo botão "Run workflow" ou quando o coletor muda. Quando o feed não mudou desde a última leitura, nada é gravado.
+- `.github/workflows/trends.yml`: cada execução fica ligada cerca de 110 minutos e lê o feed a cada 5 minutos; o GitHub inicia uma a cada 2 horas (o agendamento dele atrasa muito, por isso a execução longa). Quando o feed não mudou desde a última leitura, nada é gravado.
 
 O repositório é público para ter minutos ilimitados no GitHub Actions; os dados são do feed público do Google Trends e não há nenhuma chave aqui.
 
