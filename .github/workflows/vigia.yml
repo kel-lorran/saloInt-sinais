@@ -1,0 +1,19 @@
+name: Vigia da coleta
+
+# Confere o dado gravado, não o status das execuções. Fica vermelho (e o GitHub manda e-mail)
+# quando um coletor passa do limite sem gravar nada.
+on:
+  schedule:
+    - cron: "41 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vigiar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 coletores/vigia.py

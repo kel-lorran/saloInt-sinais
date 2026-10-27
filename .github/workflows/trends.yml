@@ -30,8 +30,9 @@ jobs:
           git config user.name "coletor-saloint"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           fim=$((SECONDS + 110 * 60))
+          ok=0; falhas=0
           while [ $SECONDS -lt $fim ]; do
-            python3 coletores/trends.py || echo "leitura falhou; tenta de novo no próximo ciclo"
+            if python3 coletores/trends.py; then ok=$((ok + 1)); else falhas=$((falhas + 1)); echo "leitura falhou; tenta de novo no próximo ciclo"; fi
             git add dados
             if ! git diff --cached --quiet; then
               git commit -q -m "Leitura do Google Trends $(date -u +%Y-%m-%dT%H:%MZ)"
@@ -39,3 +40,7 @@ jobs:
             fi
             sleep 300
           done
+          # Execução verde com dado nenhum já aconteceu (22 a 26/out/2026). Mais da metade das leituras
+          # falhando deixa a execução vermelha, e o GitHub manda e-mail.
+          echo "leituras ok: $ok; falhas: $falhas"
+          if [ $falhas -gt $ok ]; then echo "::error::mais falhas que leituras ($falhas de $((ok + falhas)))"; exit 1; fi

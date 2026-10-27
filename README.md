@@ -28,3 +28,6 @@ O repositório é público para ter minutos ilimitados no GitHub Actions; os dad
 | `noticia_titulo`, `noticia_fonte`, `noticia_url` | a primeira notícia associada |
 
 O desenho do sensor, as variáveis e a forma de medir acerto estão em `saloInt/sensores/sensor-tendencias.md`.
+
+## Vigia
+`coletores/vigia.py` roda a cada 6 horas (`.github/workflows/vigia.yml`) e confere o **dado gravado**, não o status das execuções: tendências sem leitura nova há mais de 6 horas, ou skills há mais de 36, deixam o vigia vermelho e o GitHub manda e-mail. A coleta de tendências também fica vermelha quando mais da metade das leituras de uma execução falha.
