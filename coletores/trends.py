@@ -17,6 +17,7 @@ import json
 import re
 import sys
 import urllib.parse
+import unicodedata
 import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -24,9 +25,7 @@ from pathlib import Path
 URL = "https://trends.google.com/trending/rss?geo=BR"
 HT = "{https://trends.google.com/trending/rss}"
 RAIZ = Path(__file__).resolve().parent.parent
-IBGE = "https://servicodados.ibge.gov.br/api/v2/censos/nomes/"
-CACHE_NOMES = RAIZ / "dados" / "trends" / "nomes-conhecidos.json"  # palavra -> é nome?
-NOME_MIN = 500  # nomes com pelo menos 500 registros no Censo contam como nome de pessoa
+NOMES_CENSO = RAIZ / "coletores" / "nomes-censo.txt"  # prenomes com 500+ registros no Censo 2010
 PESSOA = "[pessoa]"
 JOGO = re.compile(r"\b(x|vs|contra)\b")
 COLUNAS = ["lido_em", "termo", "faixa", "volume_min", "entrou_em",
@@ -67,30 +66,15 @@ def ler(xml, agora):
     return linhas
 
 
-def consultar_ibge(palavras):
-    """Quais palavras o IBGE registra como prenome. Levanta exceção se a API não responder."""
-    url = IBGE + urllib.parse.quote("|".join(sorted(palavras)), safe="|")
-    with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "saloInt-sinais"}), timeout=30) as r:
-        dados = json.loads(r.read())
-    return {d["nome"].lower() for d in dados if sum(x["frequencia"] for x in d["res"]) >= NOME_MIN}
+def sem_acento(s):
+    return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
 
 
 def nomes_registrados(palavras):
-    """Consulta primeiro o cache (palavra -> é nome?) e só pergunta ao IBGE as palavras novas.
-    Desde 22/out/2026 o IBGE não responde aos servidores do GitHub. Sem resposta, toda palavra
-    nova conta como nome: a leitura é gravada, mas anonimizada a mais, e nada vai para o cache."""
-    cache = json.loads(CACHE_NOMES.read_text(encoding="utf-8")) if CACHE_NOMES.exists() else {}
-    novas = sorted(p for p in palavras if p not in cache)
-    if novas:
-        try:
-            nomes = consultar_ibge(novas)
-            cache.update({p: p in nomes for p in novas})
-            CACHE_NOMES.parent.mkdir(parents=True, exist_ok=True)
-            CACHE_NOMES.write_text(json.dumps(cache, ensure_ascii=False, sort_keys=True, indent=0), encoding="utf-8")
-        except Exception as e:
-            print(f"IBGE sem resposta ({e}); {len(novas)} palavras novas contam como nome", file=sys.stderr)
-            return {p for p in palavras if cache.get(p, True)}
-    return {p for p in palavras if cache[p]}
+    """Quais palavras são prenome com pelo menos 500 registros no Censo 2010.
+    Lista fixa no repositório: a API do IBGE parou de responder aos servidores do GitHub em 22/out/2026."""
+    nomes = {l.strip() for l in NOMES_CENSO.read_text(encoding="utf-8").splitlines() if l and not l.startswith("#")}
+    return {p for p in palavras if sem_acento(p) in nomes}
 
 
 def candidato_a_pessoa(termo):
@@ -133,7 +117,7 @@ def main():
         sys.exit(f"falha ao ler o feed: {e}")
     if not linhas:
         sys.exit("o feed veio sem itens")
-    linhas = anonimizar(linhas)  # sem o IBGE, anonimiza a mais em vez de deixar de gravar
+    linhas = anonimizar(linhas)
     destino = RAIZ / "dados" / "trends" / f"{agora:%Y-%m}.csv"
     destino.parent.mkdir(parents=True, exist_ok=True)
     novo = not destino.exists()

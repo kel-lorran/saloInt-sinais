@@ -12,7 +12,7 @@ O repositório é público para ter minutos ilimitados no GitHub Actions; os dad
 
 ## Regras
 - Tudo o que o feed traz é gravado, inclusive termos que somem depois. Sem os sinais que "morreram", a medida de acerto do sensor fica inflada (viés de sobrevivência).
-- **Nomes de pessoas não são publicados.** Antes de gravar, o coletor consulta a API de nomes do IBGE: um termo de duas ou mais palavras, sem números e que não é jogo, cuja primeira palavra é um prenome registrado no Censo, vira `[pessoa]`, e a notícia associada (que traz o nome) é apagada. A faixa e os horários ficam, para a contagem de sinais. As respostas ficam em `dados/trends/nomes-conhecidos.json`, e só palavras novas vão ao IBGE. Se o IBGE não responder (desde 22/out/2026 ele não responde aos servidores do GitHub), toda palavra nova conta como nome: a leitura é gravada, anonimizada a mais.
+- **Nomes de pessoas não são publicados.** Antes de gravar, o coletor confere a lista de prenomes do Censo 2010 do IBGE guardada em `coletores/nomes-censo.txt` (13.248 nomes com pelo menos 500 registros; fonte: dataset genero-nomes do Brasil.io). Um termo de duas ou mais palavras, sem números e que não é jogo, cuja primeira palavra está na lista, vira `[pessoa]`, e a notícia associada (que traz o nome) é apagada. A faixa e os horários ficam, para a contagem de sinais. A lista fixa substituiu a API do IBGE, que parou de responder aos servidores do GitHub em 22/out/2026; de 27/out 01h38 a 12h, sem ela, 60% das linhas saíram como `[pessoa]`.
 - Nomes de uma palavra só (apelidos, artistas) passam pelo filtro.
 - Só fontes públicas e gratuitas. Nenhuma rede social é raspada.
 
