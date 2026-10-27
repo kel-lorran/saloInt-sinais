@@ -13,10 +13,8 @@ Só biblioteca padrão.
 import csv
 import datetime as dt
 import email.utils
-import json
 import re
 import sys
-import urllib.parse
 import unicodedata
 import urllib.request
 import xml.etree.ElementTree as ET
