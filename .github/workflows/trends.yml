@@ -5,8 +5,8 @@ name: Coleta Google Trends
 # Basta o GitHub iniciar uma execução a cada 2 horas para a cobertura ficar contínua.
 # Repositório público: os minutos do GitHub Actions são ilimitados.
 on:
-  schedule:
-    - cron: "7 */2 * * *"
+# PAUSADO 24/nov:   schedule:
+# PAUSADO 24/nov:     - cron: "7 */2 * * *"
   workflow_dispatch:
   push:
     branches: [main]
@@ -30,11 +30,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Pausa (24/nov/2026): com o arquivo PAUSADO na raiz, a execução sai sem ler e não dispara a próxima.
+          if [ -f PAUSADO ]; then echo "coleta pausada (arquivo PAUSADO)"; exit 0; fi
           git config user.name "coletor-saloint"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           fim=$((SECONDS + 110 * 60))
           ok=0; falhas=0
-          while [ $SECONDS -lt $fim ]; do
+          while [ $SECONDS -lt $fim ] && [ ! -f PAUSADO ]; do
             if python3 coletores/trends.py; then ok=$((ok + 1)); else falhas=$((falhas + 1)); echo "leitura falhou; tenta de novo no próximo ciclo"; fi
             git add dados
             if ! git diff --cached --quiet; then
@@ -45,7 +47,7 @@ jobs:
           done
           # O agendamento a cada 2 horas rodou, na prática, a cada 5 a 7 horas (27 e 28/out/2026), deixando
           # buracos. Cada execução dispara a próxima; o agendamento fica como reserva se a corrente quebrar.
-          gh workflow run trends.yml --ref main || echo "não consegui disparar a próxima; o agendamento cobre"
+          [ -f PAUSADO ] || gh workflow run trends.yml --ref main || echo "não consegui disparar a próxima; o agendamento cobre"
           # Execução verde com dado nenhum já aconteceu (22 a 26/out/2026). Mais da metade das leituras
           # falhando deixa a execução vermelha, e o GitHub manda e-mail.
           echo "leituras ok: $ok; falhas: $falhas"

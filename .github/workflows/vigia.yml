@@ -3,8 +3,8 @@ name: Vigia da coleta
 # Confere o dado gravado, não o status das execuções. Fica vermelho (e o GitHub manda e-mail)
 # quando um coletor passa do limite sem gravar nada.
 on:
-  schedule:
-    - cron: "41 */6 * * *"
+# PAUSADO 24/nov:   schedule:
+# PAUSADO 24/nov:     - cron: "41 */6 * * *"
   workflow_dispatch:
 
 permissions:

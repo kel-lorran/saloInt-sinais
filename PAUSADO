@@ -1,0 +1,5 @@
+Coleta do Google Trends pausada em 24/nov/2026, por decisão do autor.
+
+Motivo: desde o E3 (26/out) nenhuma decisão da saloInt usou estes dados. Análise em saloInt/framework/tendencias-pausa.md.
+Para religar: apague este arquivo, descomente o `schedule` em .github/workflows/trends.yml e vigia.yml e dispare "Coleta Google Trends" uma vez.
+A coleta de skills (skills.yml) não foi pausada.
